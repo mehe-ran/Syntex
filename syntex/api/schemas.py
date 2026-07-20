@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 # schema for agent queries
 class QueryRequest(BaseModel):
@@ -9,3 +10,10 @@ class QueryRequest(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     version: str
+
+# schema for server-sent events (sse) streaming
+class AgentEvent(BaseModel):
+    agent: str
+    status: str
+    message: Optional[str] = None
+    data: Optional[str] = None
