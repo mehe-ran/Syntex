@@ -17,3 +17,13 @@ class AgentEvent(BaseModel):
     status: str
     message: Optional[str] = None
     data: Optional[str] = None
+
+# schema for document ingestion requests
+class IngestRequest(BaseModel):
+    url: str
+
+# schema for document ingestion responses
+class IngestResponse(BaseModel):
+    status: str
+    url: str
+    chunks_processed: int
