@@ -5,6 +5,7 @@ from syntex.api.schemas import HealthResponse, QueryRequest, IngestRequest, Inge
 from syntex.api.deps import get_graph, get_vector_store
 from syntex.ingestion.scraper import DocScraper
 from syntex.ingestion.chunker import DocChunker
+from pydantic import BaseModel
 
 # initialize the api router
 router = APIRouter()
@@ -56,4 +57,26 @@ async def ingest_documentation(request: IngestRequest, vector_store=Depends(get_
         status="success",
         url=request.url,
         chunks_processed=len(chunks)
+    )
+
+class QueryResponse(BaseModel):
+    query: str
+    code: str
+    error: str | None = None
+
+@router.post("/query", response_model=QueryResponse)
+async def standard_query(request: QueryRequest, graph=Depends(get_graph)):
+    # execute the agent graph synchronously and return the final state
+    initial_state = {
+        "query": request.query,
+        "doc_source": request.doc_source
+    }
+    
+    # invoke runs the entire graph to completion
+    final_state = graph.invoke(initial_state)
+    
+    return QueryResponse(
+        query=request.query,
+        code=final_state.get("code", ""),
+        error=final_state.get("error")
     )
