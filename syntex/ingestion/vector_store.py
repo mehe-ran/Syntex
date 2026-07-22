@@ -46,24 +46,24 @@ class VectorStore:
         except Exception as e:
             logger.error(f"failed to store chunks: {e}")
 
-    def search(self, query: str, n_results: int = 4) -> list[dict]:
+    def search(self, query: str, n_results: int = 4, source_filter: str = None) -> list[dict]:
         # query the database for chunks semantically similar to the user prompt
         try:
             logger.debug(f"searching vector store for: {query}")
-            # embed the search query
             query_embedding = self.embeddings.embed_query(query)
             
-            # execute the semantic search
+            # apply metadata filter if a specific source is requested
+            where_clause = {"source": source_filter} if source_filter else None
+            
             results = self.collection.query(
                 query_embeddings=[query_embedding],
-                n_results=n_results
+                n_results=n_results,
+                where=where_clause
             )
             
-            # extract and format the retrieved data
             documents = results.get("documents", [[]])[0]
             metadatas = results.get("metadatas", [[]])[0]
             
-            # return a clean list of dictionaries for the agent to read
             return [
                 {"content": doc, "metadata": meta}
                 for doc, meta in zip(documents, metadatas)
