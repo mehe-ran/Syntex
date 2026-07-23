@@ -27,3 +27,9 @@ class IngestResponse(BaseModel):
     status: str
     url: str
     chunks_processed: int
+
+# schema for synchronous query responses
+class QueryResponse(BaseModel):
+    query: str
+    code: str
+    error: str | None = None
