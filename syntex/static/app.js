@@ -63,8 +63,16 @@ function updateUI(eventData, traceContainer, codeOutput) {
     // auto-scroll sidebar
     traceContainer.scrollTop = traceContainer.scrollHeight;
 
-    // update main code window if coder agent emits data
+    // parse markdown and update main code window
     if (eventData.agent === 'coder' && eventData.data) {
-        codeOutput.textContent = eventData.data;
+        // override container innerhtml instead of textcontent for markdown rendering
+        const container = document.getElementById('code-container');
+        container.innerHTML = marked.parse(eventData.data);
+        
+        // style the injected pre/code blocks dynamically
+        const codeBlocks = container.querySelectorAll('pre');
+        codeBlocks.forEach(block => {
+            block.className = 'bg-gray-800 p-4 rounded-lg text-gray-300 shadow-inner overflow-x-auto';
+        });
     }
 }
