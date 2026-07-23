@@ -1,11 +1,10 @@
 import json
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from syntex.api.schemas import HealthResponse, QueryRequest, IngestRequest, IngestResponse
+from syntex.api.schemas import HealthResponse, QueryRequest, IngestRequest, IngestResponse, QueryResponse
 from syntex.api.deps import get_graph, get_vector_store
 from syntex.ingestion.scraper import DocScraper
 from syntex.ingestion.chunker import DocChunker
-from pydantic import BaseModel
 
 # initialize the api router
 router = APIRouter()
@@ -21,8 +20,8 @@ async def stream_query(request: QueryRequest, graph=Depends(get_graph)):
     async def event_generator():
         initial_state = {"query": request.query}
         
-        # iterate through the graph events as they happen
-        for output in graph.stream(initial_state):
+        # add recursion_limit to prevent infinite error loops
+        for output in graph.stream(initial_state, {"recursion_limit": 5}):
             for node_name, state_update in output.items():
                 event_data = {
                     "agent": node_name,
@@ -40,17 +39,14 @@ async def ingest_documentation(request: IngestRequest, vector_store=Depends(get_
     scraper = DocScraper()
     chunker = DocChunker()
     
-    # scrape the html
     raw_text = scraper.scrape_url(request.url)
     if not raw_text:
         raise HTTPException(status_code=400, detail="failed to scrape the provided url")
         
-    # split into semantic chunks
     chunks = chunker.chunk_text(raw_text)
     if not chunks:
         raise HTTPException(status_code=400, detail="no extractable text found at url")
         
-    # store embeddings
     vector_store.add_chunks(chunks, source_url=request.url)
     
     return IngestResponse(
@@ -58,11 +54,6 @@ async def ingest_documentation(request: IngestRequest, vector_store=Depends(get_
         url=request.url,
         chunks_processed=len(chunks)
     )
-
-class QueryResponse(BaseModel):
-    query: str
-    code: str
-    error: str | None = None
 
 @router.post("/query", response_model=QueryResponse)
 async def standard_query(request: QueryRequest, graph=Depends(get_graph)):
@@ -72,8 +63,8 @@ async def standard_query(request: QueryRequest, graph=Depends(get_graph)):
         "doc_source": request.doc_source
     }
     
-    # invoke runs the entire graph to completion
-    final_state = graph.invoke(initial_state)
+    # add recursion_limit to prevent infinite error loops
+    final_state = graph.invoke(initial_state, {"recursion_limit": 5})
     
     return QueryResponse(
         query=request.query,
