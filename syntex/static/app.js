@@ -1,3 +1,6 @@
+// generate a persistent thread id for the session memory
+const sessionId = crypto.randomUUID();
+
 // handle form submission
 document.getElementById('query-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -18,7 +21,7 @@ document.getElementById('query-form').addEventListener('submit', async (e) => {
         const response = await fetch('/api/v1/query/stream', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: query })
+            body: JSON.stringify({ query: query, thread_id: sessionId })
         });
 
         const reader = response.body.getReader();
