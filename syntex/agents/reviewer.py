@@ -6,14 +6,18 @@ from syntex.core.config import settings
 from syntex.core.logger import logger
 from syntex.utils.prompts import REVIEWER_SYSTEM_PROMPT
 
-# initialize the llm with a highly strict configuration
-llm = ChatOpenAI(model=settings.model_name, temperature=0.0)
-
 def reviewer_node(state: AgentState) -> dict:
     context = state.get("context", "")
     code = state.get("code", "")
     
     logger.info("[reviewer] validating generated code against documentation")
+
+    # initialize llm inside node with explicitly configured api key
+    llm = ChatOpenAI(
+        model=settings.model_name,
+        temperature=0.0,
+        api_key=settings.openai_api_key
+    )
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", REVIEWER_SYSTEM_PROMPT),

@@ -6,9 +6,6 @@ from syntex.core.config import settings
 from syntex.core.logger import logger
 from syntex.utils.prompts import CODER_SYSTEM_PROMPT
 
-# initialize the llm
-llm = ChatOpenAI(model=settings.model_name, temperature=0.1)
-
 def coder_node(state: AgentState) -> dict:
     query = state.get("query", "")
     context = state.get("context", "")
@@ -16,6 +13,13 @@ def coder_node(state: AgentState) -> dict:
     error_feedback = state.get("error", "")
     
     logger.info("[coder] generating code boilerplate")
+
+    # initialize llm inside node with explicitly configured api key
+    llm = ChatOpenAI(
+        model=settings.model_name,
+        temperature=0.1,
+        api_key=settings.openai_api_key
+    )
 
     system_instructions = CODER_SYSTEM_PROMPT
     if error_feedback:

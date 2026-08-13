@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     # api settings
@@ -12,9 +12,10 @@ class Settings(BaseSettings):
     # vector store settings
     chroma_db_dir: str = "./data/chroma"
 
-    class Config:
-        # load variables from .env file
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
 
 settings = Settings()

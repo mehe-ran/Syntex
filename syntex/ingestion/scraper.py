@@ -1,3 +1,4 @@
+import ssl
 import urllib.request
 from bs4 import BeautifulSoup
 from syntex.core.logger import logger
@@ -18,7 +19,10 @@ class DocScraper:
                 headers={'User-Agent': 'Mozilla/5.0'}
             )
             
-            with urllib.request.urlopen(req) as response:
+            # create an unverified ssl context to bypass macos local issuer cert issues
+            ssl_context = ssl._create_unverified_context()
+            
+            with urllib.request.urlopen(req, context=ssl_context) as response:
                 html_content = response.read()
 
             # parse html and remove noisy web elements
