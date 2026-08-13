@@ -1,0 +1,18 @@
+# Virtual Environment
+venv/
+.venv/
+
+# PyCharm / IDE
+.idea/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+*.env
+
+# Local data & vector database
+data/
