@@ -5,6 +5,7 @@ from typing import Optional
 class QueryRequest(BaseModel):
     query: str
     doc_source: str | None = None
+    thread_id: str | None = None
 
 # schema for api health check
 class HealthResponse(BaseModel):

@@ -1,4 +1,5 @@
 import json
+import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from syntex.api.schemas import HealthResponse, QueryRequest, IngestRequest, IngestResponse, QueryResponse
@@ -20,8 +21,10 @@ async def stream_query(request: QueryRequest, graph=Depends(get_graph)):
     async def event_generator():
         initial_state = {"query": request.query}
         
-        # add recursion_limit to prevent infinite error loops
-        for output in graph.stream(initial_state, {"recursion_limit": 5}):
+        # add recursion_limit and thread_id memory
+        thread_id = request.thread_id or str(uuid.uuid4())
+        config = {"recursion_limit": 5, "configurable": {"thread_id": thread_id}}
+        for output in graph.stream(initial_state, config):
             for node_name, state_update in output.items():
                 event_data = {
                     "agent": node_name,
@@ -63,8 +66,10 @@ async def standard_query(request: QueryRequest, graph=Depends(get_graph)):
         "doc_source": request.doc_source
     }
     
-    # add recursion_limit to prevent infinite error loops
-    final_state = graph.invoke(initial_state, {"recursion_limit": 5})
+    # add recursion_limit and thread_id memory
+    thread_id = request.thread_id or str(uuid.uuid4())
+    config = {"recursion_limit": 5, "configurable": {"thread_id": thread_id}}
+    final_state = graph.invoke(initial_state, config)
     
     return QueryResponse(
         query=request.query,
